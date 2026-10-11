@@ -365,6 +365,9 @@ changes (where available).
 - Fixed the feather of paths created by vectorizing a raster mask or an
   AI object, which could not be changed from the mask manager.
 
+- Fixed images whose camera maker or model contains a quote not having
+  their information, such as size and Exif data, saved to the library.
+
 - Fixed HEIF export compilation with libheif versions older than 1.15.0,
   and with versions older than 1.16.0 when libsharpyuv is available.
 
