@@ -4430,6 +4430,10 @@ start:
   sqlite3_exec(db->handle, "PRAGMA synchronous = OFF", NULL, NULL, NULL);
   sqlite3_exec(db->handle, "PRAGMA journal_mode = MEMORY", NULL, NULL, NULL);
   sqlite3_exec(db->handle, "PRAGMA page_size = 32768", NULL, NULL, NULL);
+  // the default page cache is 2 MiB per schema, so with a large library
+  // every collection query rereads most of library.db through pread();
+  // 64 MiB holds the whole library.db of a ~100k image library
+  sqlite3_exec(db->handle, "PRAGMA main.cache_size = -65536", NULL, NULL, NULL);
 
   // WARNING: the foreign_keys pragma must not be used, the integrity of the
   // database rely on it.
