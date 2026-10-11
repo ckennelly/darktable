@@ -2146,8 +2146,10 @@ void dt_thumbnail_resize(dt_thumbnail_t *thumb,
   // and the overlays for the block only (the others have been done before)
   if(thumb->over == DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK) _thumb_resize_overlays(thumb);
 
-  // reset surface
-  dt_thumbnail_image_refresh(thumb);
+  // redraw but keep the native color-converted surface: a resize doesn't
+  // change the pixels, and the surface is keyed on the mipmap level, so a
+  // size change across a mipmap bucket still refetches
+  dt_thumbnail_image_refresh_zoom(thumb);
 }
 
 void dt_thumbnail_set_group_border(dt_thumbnail_t *thumb,
