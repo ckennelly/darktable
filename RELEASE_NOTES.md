@@ -200,6 +200,10 @@ changes (where available).
   number of collected images: with a 100,000-image collection it took
   about 15 minutes to draw, now a few seconds.
 
+- Faster collection updates, such as after rating an image, in large
+  libraries: the library database page cache is raised from 2 MiB to
+  64 MiB.
+
 - Replaced quadratic XMP history writes with a linear algorithm.
 
 - Don't invalidate the pixelpipe cache on every commit
