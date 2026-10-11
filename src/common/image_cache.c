@@ -446,6 +446,63 @@ void dt_image_cache_write_release_info(dt_image_t *img,
   }
 }
 
+// as dt_image_cache_write_release_info(), for a caller that only changed
+// img->flags: the other columns have their own writers, some of which
+// update the database directly (e.g. group_id), so writing the cached
+// row back is not needed and can even be stale
+void dt_image_cache_write_release_flags(dt_image_t *img,
+                                        const dt_image_cache_write_mode_t mode,
+                                        const char *info)
+{
+  if(!img)  // nothing to release
+    return;
+
+  dt_image_cache_t *cache = darktable.image_cache;
+  assert(cache);
+
+  if(!dt_is_valid_imgid(img->id))
+  {
+    dt_cache_release(&cache->cache, img->cache_entry);
+    dt_print(DT_DEBUG_ALWAYS,
+             "[image_cache_write_release_flags] from `%s`. FATAL invalid image id %d",
+             info, img->id);
+    return;
+  }
+
+  const double start = dt_get_debug_wtime();
+
+  sqlite3_stmt *stmt;
+  // clang-format off
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "UPDATE main.images SET flags = ?1 WHERE id = ?2",
+                              -1, &stmt, NULL);
+  // clang-format on
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, img->flags);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, img->id);
+  const int rc = sqlite3_step(stmt);
+  if(rc != SQLITE_DONE)
+    dt_print(DT_DEBUG_ALWAYS,
+             "[image_cache_write_release_flags] from `%s' sqlite3 error %d (%s) for imgid %d",
+             info,
+             rc,
+             sqlite3_errmsg(dt_database_get(darktable.db)),
+             img->id);
+  sqlite3_finalize(stmt);
+
+  if(mode == DT_IMAGE_CACHE_SAFE)
+    dt_image_synch_xmp(img->id);
+
+  dt_cache_release(&cache->cache, img->cache_entry);
+
+  if(info)
+  {
+    const double spent = dt_get_debug_wtime() - start;
+    dt_print(DT_DEBUG_CACHE,
+             "[image_cache_write_release_flags] from `%s', imgid=%i took %.3fs",
+             info, img->id, spent);
+  }
+}
+
 void dt_image_cache_write_release(dt_image_t *img, const dt_image_cache_write_mode_t mode)
 {
   dt_image_cache_write_release_info(img, mode, NULL);

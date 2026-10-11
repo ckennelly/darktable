@@ -67,6 +67,11 @@ void dt_image_cache_write_release(dt_image_t *img, const dt_image_cache_write_mo
 void dt_image_cache_write_release_info(dt_image_t *img,
                                        const dt_image_cache_write_mode_t mode,
                                        const char *info);
+// as above for a caller that only changed img->flags: writes just the
+// flags column instead of the whole row
+void dt_image_cache_write_release_flags(dt_image_t *img,
+                                        const dt_image_cache_write_mode_t mode,
+                                        const char *info);
 
 // remove the image from the cache
 void dt_image_cache_remove(const dt_imgid_t imgid);
