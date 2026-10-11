@@ -1209,13 +1209,20 @@ static void _dt_profile_change_callback(gpointer instance,
 {
   if(!user_data) return;
   dt_culling_t *table = (dt_culling_t *)user_data;
-  if(!gtk_widget_get_visible(table->widget)) return;
+  // also while hidden: the thumbnails and their color-converted surfaces
+  // outlive a visit to the darkroom, where the display profile can change
 
   for(GList *l = table->list; l; l = g_list_next(l))
   {
     dt_thumbnail_t *th = l->data;
     dt_thumbnail_image_refresh(th);
   }
+}
+
+static void _dt_display_profile_change_callback(gpointer instance,
+                                                gpointer user_data)
+{
+  _dt_profile_change_callback(instance, 0, user_data);
 }
 
 // this is called each time mouse_over id change
@@ -1347,6 +1354,8 @@ dt_culling_t *dt_culling_new(const dt_culling_mode_t mode)
                             _dt_mouse_over_image_callback, table);
   DT_CONTROL_SIGNAL_CONNECT(DT_SIGNAL_CONTROL_PROFILE_USER_CHANGED,
                             _dt_profile_change_callback, table);
+  DT_CONTROL_SIGNAL_CONNECT(DT_SIGNAL_CONTROL_PROFILE_CHANGED,
+                            _dt_display_profile_change_callback, table);
   DT_CONTROL_SIGNAL_CONNECT(DT_SIGNAL_PREFERENCES_CHANGE,
                             _dt_pref_change_callback, table);
   DT_CONTROL_SIGNAL_CONNECT(DT_SIGNAL_VIEWMANAGER_THUMBTABLE_ACTIVATE,
