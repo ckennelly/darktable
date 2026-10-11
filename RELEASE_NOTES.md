@@ -175,6 +175,10 @@ changes (where available).
   number of collected images: with a 100,000-image collection it took
   about 15 minutes to draw, now a few seconds.
 
+- Faster rating and other metadata changes in the lighttable after the
+  map view has been opened once in the session: the hidden map no
+  longer reloads its image markers on every collection change.
+
 - Replaced quadratic XMP history writes with a linear algorithm.
 
 - Don't invalidate the pixelpipe cache on every commit
