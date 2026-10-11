@@ -3904,14 +3904,17 @@ int32_t dt_image_get_camera_id(const char *maker, const char *model)
                                n_model, sizeof(n_model),
                                n_alias, sizeof(n_alias));
 
-  char *query = g_strdup_printf("SELECT id"
-                                "  FROM main.cameras"
-                                "  WHERE maker = '%s'"
-                                "    AND model = '%s'",
-                                n_maker, n_model);
-
+  // the names come from the image's Exif data when the camera is unknown
+  // to rawspeed and LibRaw, so bind them rather than formatting them into
+  // the query
   DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              query, -1, &stmt, NULL);
+                              "SELECT id"
+                              "  FROM main.cameras"
+                              "  WHERE maker = ?1"
+                              "    AND model = ?2",
+                              -1, &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, n_maker, -1, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, n_model, -1, SQLITE_TRANSIENT);
 
   int32_t id = -1;
 
@@ -3921,19 +3924,19 @@ int32_t dt_image_get_camera_id(const char *maker, const char *model)
   }
   else
   {
-    g_free(query);
-    query = g_strdup_printf("INSERT"
-                            "  INTO main.cameras (maker, model, alias)"
-                            "  VALUES ('%s', '%s', '%s')",
-                            n_maker, n_model,
-                            n_alias);
-
-    DT_DEBUG_SQLITE3_EXEC(dt_database_get(darktable.db),
-                          query, NULL, NULL, NULL);
+    sqlite3_finalize(stmt);
+    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                                "INSERT"
+                                "  INTO main.cameras (maker, model, alias)"
+                                "  VALUES (?1, ?2, ?3)",
+                                -1, &stmt, NULL);
+    DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, n_maker, -1, SQLITE_TRANSIENT);
+    DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, n_model, -1, SQLITE_TRANSIENT);
+    DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 3, n_alias, -1, SQLITE_TRANSIENT);
+    sqlite3_step(stmt);
     id = dt_database_last_insert_rowid(darktable.db);
   }
 
-  g_free(query);
   sqlite3_finalize(stmt);
 
   return id;
