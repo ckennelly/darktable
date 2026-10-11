@@ -719,8 +719,6 @@ void init(dt_view_t *self)
 
   dt_map_t *lib = self->data;
 
-  darktable.view_manager->proxy.map.view = self;
-
   if(darktable.gui)
   {
     lib->image_pin = _init_image_pin();
