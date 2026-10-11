@@ -1150,6 +1150,8 @@ static void _dt_pref_change_callback(gpointer instance,
         : table->zoom_ratio;
 
       dt_thumbnail_resize(th, th->width, th->height, TRUE, zoom_ratio);
+      // preferences such as cache_color_managed can change the pixels
+      dt_thumbnail_image_refresh(th);
     }
   }
   dt_get_sysresource_level();
