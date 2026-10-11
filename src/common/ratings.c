@@ -75,7 +75,6 @@ static void _ratings_apply_to_image(const dt_imgid_t imgid,
     // synch through:
     dt_image_cache_write_release_flags(image, DT_IMAGE_CACHE_SAFE,
                                        "_ratings_apply_to_image");
-    DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_METADATA_CHANGED, DT_METADATA_SIGNAL_NEW_VALUE);
   }
 }
 
@@ -96,6 +95,7 @@ static void _pop_undo(gpointer user_data,
                               : ratings->after);
       *imgs = g_list_prepend(*imgs, GINT_TO_POINTER(ratings->imgid));
     }
+    DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_METADATA_CHANGED, DT_METADATA_SIGNAL_NEW_VALUE);
     dt_collection_hint_message(darktable.collection);
   }
 }
@@ -231,6 +231,8 @@ static void _ratings_apply(const GList *imgs,
 
     _ratings_apply_to_image(image_id, new_rating);
   }
+  if(imgs)
+    DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_METADATA_CHANGED, DT_METADATA_SIGNAL_NEW_VALUE);
 }
 
 void dt_ratings_apply_on_list(const GList *img,
