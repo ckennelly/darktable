@@ -779,6 +779,23 @@ dt_view_surface_value_t dt_view_image_get_surface(const dt_imgid_t imgid,
   return dt_view_image_get_surface_cached(imgid, width, height, surface, quality, NULL, NULL);
 }
 
+// a native surface is only valid while the mipmap it was converted from is
+// still cached at the same size: dt_image_set_flip() and leaving the darkroom drop the
+// mipmap without raising DT_SIGNAL_DEVELOP_MIPMAP_UPDATED, and the next
+// regeneration does raise it
+static gboolean _native_surface_current(const dt_imgid_t imgid,
+                                        const dt_mipmap_size_t mip,
+                                        cairo_surface_t *native)
+{
+  dt_mipmap_buffer_t buf;
+  dt_mipmap_cache_get(&buf, imgid, mip, DT_MIPMAP_TESTLOCK, 'r');
+  const gboolean current = buf.buf
+    && buf.width == cairo_image_surface_get_width(native)
+    && buf.height == cairo_image_surface_get_height(native);
+  dt_mipmap_cache_release(&buf);
+  return current;
+}
+
 dt_view_surface_value_t dt_view_image_get_surface_cached(const dt_imgid_t imgid,
                                                          const int32_t width,
                                                          const int32_t height,
@@ -804,9 +821,12 @@ dt_view_surface_value_t dt_view_image_get_surface_cached(const dt_imgid_t imgid,
 
   // Fast path: if the caller provides a cached native-resolution surface for
   // this exact mip level, skip the expensive mipmap fetch + color conversion
-  // and just rescale the existing cached surface.
+  // and just rescale the existing cached surface. Focus peaking is drawn on
+  // the scaled surface by the full path only, so it can't use the cache.
   if(mip_cache && *mip_cache && mip_cache_level && *mip_cache_level == mip
-     && cairo_surface_status(*mip_cache) == CAIRO_STATUS_SUCCESS)
+     && !darktable.gui->show_focus_peaking
+     && cairo_surface_status(*mip_cache) == CAIRO_STATUS_SUCCESS
+     && _native_surface_current(imgid, mip, *mip_cache))
   {
     const int32_t cached_wd = cairo_image_surface_get_width(*mip_cache);
     const int32_t cached_ht = cairo_image_surface_get_height(*mip_cache);
