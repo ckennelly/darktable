@@ -200,6 +200,10 @@ changes (where available).
   number of collected images: with a 100,000-image collection it took
   about 15 minutes to draw, now a few seconds.
 
+- Faster rating, color labeling and other metadata changes in the
+  culling layout and full preview: the displayed image is no longer
+  color-converted again when the view is refreshed at the same size.
+
 - Replaced quadratic XMP history writes with a linear algorithm.
 
 - Don't invalidate the pixelpipe cache on every commit
